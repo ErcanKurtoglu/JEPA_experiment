@@ -9,13 +9,32 @@ import numpy as np
 import torch
 
 
+def cuda_device_compatible(index: int = 0) -> bool:
+    """Return whether this PyTorch wheel contains code for the CUDA device.
+
+    ``torch.cuda.is_available()`` only proves that a CUDA runtime and device are
+    visible.  It can still be true when a binary wheel no longer includes the
+    GPU's compute architecture, as with CUDA 12.8 wheels and Tesla P100 (sm_60).
+    """
+
+    if not torch.cuda.is_available() or index < 0 or index >= torch.cuda.device_count():
+        return False
+    supported = set(torch.cuda.get_arch_list())
+    if not supported:
+        # Some platform builds do not expose their compile architecture list.
+        # Availability is the best non-invasive signal in that case.
+        return True
+    major, minor = torch.cuda.get_device_capability(index)
+    architecture = f"{major}{minor}"
+    return f"sm_{architecture}" in supported or f"compute_{architecture}" in supported
+
+
 def _device_available(device: torch.device) -> bool:
     if device.type == "cpu":
         return True
     if device.type == "cuda":
-        return torch.cuda.is_available() and (
-            device.index is None or device.index < torch.cuda.device_count()
-        )
+        index = 0 if device.index is None else device.index
+        return cuda_device_compatible(index)
     if device.type == "mps":
         mps = getattr(torch.backends, "mps", None)
         return mps is not None and mps.is_available()

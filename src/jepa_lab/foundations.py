@@ -10,6 +10,8 @@ from typing import Any
 
 import torch
 
+from .device import cuda_device_compatible
+
 
 def image_token_grid(image_size: int = 224, patch_size: int = 16) -> tuple[int, int]:
     """Return the 2-D patch-token grid, rejecting partial patches."""
@@ -86,18 +88,22 @@ def environment_report() -> dict[str, Any]:
     cuda_available = torch.cuda.is_available()
     mps_backend = getattr(torch.backends, "mps", None)
     mps_available = bool(mps_backend and mps_backend.is_available())
+    cuda_compatible = cuda_device_compatible(0) if cuda_available else False
     report: dict[str, Any] = {
         "python": sys.version.split()[0],
         "platform": platform.platform(),
         "machine": platform.machine(),
         "torch": torch.__version__,
         "cuda_available": cuda_available,
+        "cuda_arch_compatible": cuda_compatible,
         "mps_available": mps_available,
-        "recommended_device": "cuda" if cuda_available else "mps" if mps_available else "cpu",
+        "recommended_device": "cuda" if cuda_compatible else "mps" if mps_available else "cpu",
     }
     if cuda_available:
         properties = torch.cuda.get_device_properties(0)
         report["cuda_device"] = properties.name
+        report["cuda_compute_capability"] = list(torch.cuda.get_device_capability(0))
+        report["torch_cuda_arch_list"] = torch.cuda.get_arch_list()
         report["cuda_vram_gib"] = round(properties.total_memory / 1024**3, 2)
         report["vjepa2_ac_profile"] = (
             "gpu-replay" if properties.total_memory >= 24 * 1024**3 else "reduced-or-cpu-replay"

@@ -5,7 +5,12 @@ import pytest
 import torch
 from torch import nn
 
-from jepa_lab.device import seed_everything, seeded_generator, select_device
+from jepa_lab.device import (
+    cuda_device_compatible,
+    seed_everything,
+    seeded_generator,
+    select_device,
+)
 from jepa_lab.ema import update_ema
 from jepa_lab.image_jepa import PatchEmbed
 from jepa_lab.masking import MultiBlockMasker, RandomPatchMasker
@@ -29,6 +34,21 @@ def test_seed_everything_is_reproducible() -> None:
     assert np.array_equal(first_numpy, np.random.rand(4))
     assert select_device("cpu") == torch.device("cpu")
     assert select_device(["cpu"]) == torch.device("cpu")
+
+
+def test_cuda_architecture_must_be_present_in_torch_wheel(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(torch.cuda, "device_count", lambda: 1)
+    monkeypatch.setattr(torch.cuda, "get_device_capability", lambda _index=0: (6, 0))
+    monkeypatch.setattr(torch.cuda, "get_arch_list", lambda: ["sm_70", "sm_75", "sm_80"])
+    monkeypatch.setattr(torch.backends.mps, "is_available", lambda: False)
+
+    assert not cuda_device_compatible()
+    assert select_device("auto") == torch.device("cpu")
+    with pytest.raises(RuntimeError, match="not available"):
+        select_device("cuda")
 
 
 def test_exact_ema_update_and_invalid_momentum() -> None:

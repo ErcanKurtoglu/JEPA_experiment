@@ -101,15 +101,42 @@ Ortam profillerinin makinece okunabilir tanımı `configs/profiles.yaml` dosyas�
 
 ### Kaggle GPU — ana ortam
 
-Zorunlu küçük training ve ablation'lar Kaggle GPU için tasarlanmıştır. Yeni notebook'ta Internet'i açın ve ilk hücrelerde şu akışı kullanın:
+Zorunlu küçük training ve ablation'lar Kaggle GPU için tasarlanmıştır. Yeni notebook'ta Internet'i açın ve ilk hücrelerde şu akışı kullanın. Uzak Kaggle kernel'ında `vscode` veya `dev` extra'sını kurmayın; kernel ve Jupyter paketleri Kaggle tarafından yönetilir:
 
 ```python
-!git clone --recurse-submodules <YOUR_REPO_URL> /kaggle/working/jepa-study
+!git clone --recurse-submodules https://github.com/ErcanKurtoglu/JEPA_experiment.git /kaggle/working/jepa-study
 %cd /kaggle/working/jepa-study
-!python -m pip install -e ".[dev]"
+%pip install -e . --no-deps
 !jepa-lab doctor --strict
 !pytest -q
 ```
+
+Önce Kaggle'ın verdiği GPU ile kurulu PyTorch wheel'inin gerçekten uyumlu
+olduğunu kontrol edin:
+
+```python
+import torch
+print(torch.__version__)
+print(torch.cuda.get_device_name(0))
+print(torch.cuda.get_device_capability(0))
+print(torch.cuda.get_arch_list())
+```
+
+Tesla P100 `sm_60` kullanır. Eğer arch listesinde `sm_60` yoksa
+`torch.cuda.is_available()` tek başına yeterli değildir ve CUDA işlemi
+başarısız olur. Mümkünse Kaggle ayarından T4/L4 seçip oturumu yeniden
+başlatın. P100 kullanmak zorundaysanız temiz oturumun ilk hücresinde resmî
+CUDA 12.6 wheel'ini kurun:
+
+```python
+%pip install --force-reinstall torch==2.7.1 torchvision==0.22.1 \
+  --index-url https://download.pytorch.org/whl/cu126
+```
+
+Bu kurulumdan sonra kernel'ı yeniden başlatın, VS Code Compatible URL ile
+yeniden bağlanın ve clone/install hücresini çalıştırın. PyTorch 2.8 ve sonrası
+CUDA 12.8 binary'lerinde P100'ü kapsayan `sm_60` kaldırılmıştır; CUDA 12.6
+binary'leri bu mimariyi korur.
 
 VS Code arayüzünü kullanıp hücreleri Kaggle GPU'da çalıştırmak için Kaggle
 Notebook Editor'da **Settings → Accelerator → GPU** seçin. Ardından
@@ -120,9 +147,8 @@ Server** üzerinden bu URL'yi yapıştırın. Bu özellik Kaggle tarafında dene
 olduğundan oturum kapanınca yeni URL almak gerekebilir.
 
 Uzak kernel yerel diski otomatik olarak bağlamaz. Bu nedenle yukarıdaki clone
-ve install hücrelerini önce Kaggle web notebook'unda çalıştırın. Repo şu anda
-bir Git remote'una bağlı değilse önce GitHub/GitLab gibi Kaggle'ın erişebildiği
-bir remote'a push edin ya da projeyi Kaggle'a özel veri kaynağı olarak yükleyin.
+ve install hücrelerini Kaggle web notebook'unda veya bağlantıdan sonra VS Code
+notebook'una eklenen geçici bir bootstrap hücresinde çalıştırın.
 Notebook bootstrap hücreleri hem `/kaggle/working/jepa-study` hem eski
 `/kaggle/working/I-JEPA` yolunu tanır.
 
