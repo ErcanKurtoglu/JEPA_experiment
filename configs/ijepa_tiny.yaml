@@ -1,0 +1,45 @@
+experiment: ijepa_tiny_imagenette
+seed: 42
+data:
+  dataset: imagenette-160
+  root: data/imagenette2-160
+  image_size: 224
+  train_split: train
+  validation_split: val
+model:
+  architecture: official_vit_tiny
+  embed_dim: 192
+  encoder_depth: 12
+  encoder_heads: 3
+  patch_size: 16
+  predictor_dim: 192
+  predictor_depth: 4
+  predictor_heads: 3
+mask:
+  kind: multiblock
+  target_blocks: 4
+  target_scale: [0.15, 0.20]
+  target_aspect_ratio: [0.75, 1.50]
+  context_scale: [0.85, 1.00]
+  context_aspect_ratio: 1.0
+objective:
+  loss: smooth_l1
+  normalize_target: true
+  ema_start: 0.996
+  ema_end: 1.0
+optimization:
+  optimizer: adamw
+  effective_batch_size: 128
+  learning_rate: 0.0005
+  weight_decay: 0.04
+runs:
+  smoke_steps: 10
+  overfit_images: 128
+  overfit_steps: 300
+  baseline_epochs: 30
+  ablation_epochs: 10
+  ablations:
+    - one_target
+    - random_patch_mask
+    - target_input_masking
+    - zero_momentum_teacher

@@ -1,0 +1,24 @@
+This workspace links to, but does not copy or relicense, the following upstream
+repositories. Their own license files remain authoritative.
+
+facebookresearch/ijepa
+  Path: upstream/ijepa
+  License: Creative Commons Attribution-NonCommercial 4.0 International
+  Pin: 52c1ae95d05f743e000e8f10a1f3a79b10cff048
+
+facebookresearch/jepa (V-JEPA)
+  Path: upstream/vjepa
+  License: Creative Commons Attribution-NonCommercial 4.0 International
+  Pin: 51c59d518fc63c08464af6de585f78ac0c7ed4d5
+
+facebookresearch/vjepa2
+  Path: upstream/vjepa2
+  License: MIT (individual files may carry their own notices)
+  Pin: 9a061fffe395573a2ee61dadcd3cf5baa188e3f2
+
+facebookresearch/dino is not vendored. Its official pretrained model and code
+are used as an optional comparison under the repository's Apache-2.0 license.
+
+The local jepa_lab package is an original educational implementation and is
+not a paper-scale reproduction. Academic use of this workspace does not alter
+the non-commercial restrictions of the I-JEPA and V-JEPA upstream projects.

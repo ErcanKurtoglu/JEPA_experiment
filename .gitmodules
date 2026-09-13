@@ -1,0 +1,9 @@
+[submodule "upstream/ijepa"]
+	path = upstream/ijepa
+	url = https://github.com/facebookresearch/ijepa.git
+[submodule "upstream/vjepa"]
+	path = upstream/vjepa
+	url = https://github.com/facebookresearch/jepa.git
+[submodule "upstream/vjepa2"]
+	path = upstream/vjepa2
+	url = https://github.com/facebookresearch/vjepa2.git

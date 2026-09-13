@@ -1,0 +1,33 @@
+profiles:
+  kaggle_16gb:
+    device_order: [cuda, cpu]
+    precision: fp32
+    mixed_precision_after_smoke: fp16
+    image_microbatch: 32
+    image_gradient_accumulation: 4
+    video_microbatch: 4
+    num_workers: 2
+    pin_memory: true
+    vjepa2_ac_mode: reduced_or_cpu
+  cuda_24plus:
+    device_order: [cuda, cpu]
+    precision: fp32
+    mixed_precision_after_smoke: bf16
+    image_microbatch: 32
+    image_gradient_accumulation: 4
+    video_microbatch: 8
+    num_workers: 4
+    pin_memory: true
+    vjepa2_ac_mode: gpu_replay
+  colab_fallback:
+    inherit_by_vram: true
+    fallback_profile: kaggle_16gb
+  local_mps:
+    device_order: [mps, cpu]
+    precision: fp32
+    image_microbatch: 4
+    image_gradient_accumulation: 8
+    video_microbatch: 1
+    num_workers: 0
+    pin_memory: false
+    vjepa2_ac_mode: inspect_only

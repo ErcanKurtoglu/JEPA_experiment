@@ -1,0 +1,35 @@
+experiment: vjepa_tiny_moving_shapes
+seed: 42
+data:
+  dataset: moving-shapes
+  samples: 4096
+  frames: 8
+  image_size: 112
+model:
+  embed_dim: 192
+  encoder_depth: 6
+  encoder_heads: 3
+  patch_size: 16
+  tubelet_size: 2
+  predictor_dim: 192
+  predictor_depth: 4
+  predictor_heads: 3
+mask:
+  temporal_scale: 1.0
+  short_blocks: 8
+  short_spatial_scale: [0.12, 0.18]
+  long_blocks: 2
+  long_spatial_scale: [0.65, 0.75]
+  aspect_ratio: [0.75, 1.50]
+objective:
+  loss: l1
+  normalize_target: true
+  ema_start: 0.998
+  ema_end: 1.0
+optimization:
+  optimizer: adamw
+  steps: 5000
+  learning_rate: 0.0005
+  weight_decay: 0.04
+ablation:
+  compare: [non_causal_multiblock, causal_future]

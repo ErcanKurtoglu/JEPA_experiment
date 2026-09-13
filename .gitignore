@@ -1,0 +1,29 @@
+.DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Large or regenerated research artifacts
+data/
+artifacts/
+runs/
+checkpoints/
+*.ckpt
+*.pth
+*.pth.tar
+*.pt
+*.safetensors
+
+# Local notebook and editor state
+.env
+.idea/
+.vscode/
+!.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

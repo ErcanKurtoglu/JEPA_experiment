@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jepa-lab"
+version = "0.1.0"
+description = "Device-agnostic learning labs from I-JEPA to action-conditioned world models"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = { text = "MIT" }
+authors = [{ name = "JEPA Study Workspace" }]
+dependencies = [
+  "numpy>=1.26,<3",
+  "Pillow>=10,<13",
+  "PyYAML>=6,<7",
+  "matplotlib>=3.8,<4",
+  "torch>=2.2,<3",
+  "torchvision>=0.17,<1",
+  "tqdm>=4.66,<5",
+]
+
+[project.optional-dependencies]
+vscode = [
+  "ipykernel>=6.29,<8",
+]
+notebooks = [
+  "ipykernel>=6.29,<8",
+  "jupyterlab>=4.2,<5",
+]
+video = [
+  "imageio>=2.34,<3",
+  "imageio-ffmpeg>=0.5,<1",
+  "opencv-python-headless>=4.10,<5",
+]
+hf = [
+  "safetensors>=0.4,<1",
+  "transformers>=4.57,<6",
+]
+ac = [
+  "einops>=0.8,<1",
+  "scipy>=1.13,<2",
+  "timm>=1.0,<2",
+]
+test = [
+  "pytest>=8,<10",
+  "pytest-cov>=5,<8",
+]
+dev = [
+  "ipykernel>=6.29,<8",
+  "jupyterlab>=4.2,<5",
+  "imageio>=2.34,<3",
+  "imageio-ffmpeg>=0.5,<1",
+  "opencv-python-headless>=4.10,<5",
+  "safetensors>=0.4,<1",
+  "transformers>=4.57,<6",
+  "pytest>=8,<10",
+  "pytest-cov>=5,<8",
+  "ruff>=0.8,<1",
+]
+
+[project.scripts]
+jepa-lab = "jepa_lab.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["notebooks", "upstream"]

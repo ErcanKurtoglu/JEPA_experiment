@@ -1,0 +1,30 @@
+experiment: planar_reaching_action_world_model
+seed: 42
+environment:
+  image_size: 64
+  world_min: 0.0
+  world_max: 1.0
+  success_distance: 0.08
+  max_episode_steps: 20
+  action_limit_xy: 0.10
+model:
+  action_dim: 7
+  state_dim: 7
+  hidden_dim: 256
+  layers: 4
+  heads: 8
+  rollout_horizons: [1, 2, 4]
+  teacher_forcing_weight: 1.0
+  two_step_rollout_weight: 1.0
+planner:
+  algorithm: cem
+  horizon: 4
+  candidates: 256
+  elites: 32
+  refinements: 5
+  execute_actions: 1
+evaluation:
+  held_out_seeds: 100
+  minimum_success_rate: 0.80
+  minimum_random_margin: 0.30
+  require_non_increasing_elite_energy: true

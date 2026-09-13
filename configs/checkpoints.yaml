@@ -1,0 +1,34 @@
+checkpoints:
+  dino_vits16:
+    family: dino
+    source_repo: https://github.com/facebookresearch/dino
+    source_commit: 7c446df5b9f45747937fb0d72314eb9f7b66930a
+    url: https://dl.fbaipublicfiles.com/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth
+    purpose: frozen representation and attention comparison
+  ijepa_vith14_in1k:
+    family: ijepa
+    source_commit: 52c1ae95d05f743e000e8f10a1f3a79b10cff048
+    url: https://dl.fbaipublicfiles.com/ijepa/IN1K-vit.h.14-300e.pth.tar
+    purpose: pretrained encoder and predictor anatomy
+  vjepa_vitl16_224:
+    family: vjepa
+    source_commit: 51c59d518fc63c08464af6de585f78ac0c7ed4d5
+    url: https://dl.fbaipublicfiles.com/jepa/vitl16/vitl16.pth.tar
+    purpose: frozen video representation and predictor anatomy
+  vjepa2_vitl_fpc64_256:
+    family: vjepa2
+    source_commit: 9a061fffe395573a2ee61dadcd3cf5baa188e3f2
+    url: https://huggingface.co/facebook/vjepa2-vitl-fpc64-256
+    revision: b3c1679b7c34d3255ef3547f27c7b226aefab26f
+    direct_official_url: https://dl.fbaipublicfiles.com/vjepa2/vitl.pt
+    purpose: Hugging Face frozen video representation
+  vjepa2_ac:
+    family: vjepa2_ac
+    source_commit: 9a061fffe395573a2ee61dadcd3cf5baa188e3f2
+    url: https://dl.fbaipublicfiles.com/vjepa2/vjepa2-ac-vitg.pt
+    purpose: official Franka trajectory replay; resolve checkpoint URL from pinned README
+
+integrity_policy:
+  algorithm: sha256
+  behavior: compute and write a JSON sidecar on first download; enforce it on reuse
+  large_files_are_gitignored: true
