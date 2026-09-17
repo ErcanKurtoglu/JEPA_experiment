@@ -28,6 +28,26 @@ def test_training_checkpoint_round_trip_restores_model_optimizer_and_step(
     assert path.with_suffix(".pt.json").is_file()
 
 
+def test_training_checkpoint_loads_legacy_torch_version_metadata(tmp_path: Path) -> None:
+    model = nn.Linear(3, 2)
+    path = tmp_path / "legacy-torch-version.pt"
+    torch.save(
+        {
+            "schema_version": 1,
+            "step": 4,
+            "model": model.state_dict(),
+            "optimizer": None,
+            "metadata": {"torch": torch.__version__},
+        },
+        path,
+    )
+
+    result = load_training_checkpoint(path, model)
+
+    assert result.step == 4
+    assert result.metadata["torch"] == str(torch.__version__)
+
+
 def test_training_checkpoint_rejects_digest_mismatch(tmp_path: Path) -> None:
     model = nn.Linear(2, 2)
     path = save_training_checkpoint(tmp_path / "model.pt", model, None, step=1)

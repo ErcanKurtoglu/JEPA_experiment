@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import json
 from collections.abc import Mapping
+from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -42,7 +43,9 @@ def save_training_checkpoint(
     try:
         # Validate before touching an existing checkpoint. The same representation
         # is written to both the Torch payload and its human-readable sidecar.
-        json.dumps(metadata_payload, ensure_ascii=False)
+        metadata_payload = json.loads(
+            json.dumps(metadata_payload, ensure_ascii=False)
+        )
     except (TypeError, ValueError) as error:
         raise TypeError("checkpoint metadata must be JSON serializable") from error
 
@@ -105,7 +108,20 @@ def load_training_checkpoint(
     ):
         raise ValueError(f"SHA-256 mismatch for checkpoint {path}: {digest}")
 
-    payload = torch.load(path, map_location=map_location, weights_only=True)
+    # Legacy checkpoints may contain ``torch.__version__`` as TorchVersion, a
+    # harmless ``str`` subclass rejected by newer weights-only loaders. Keep
+    # weights-only protection and narrowly allowlist only that known type.
+    try:
+        from torch.torch_version import TorchVersion
+    except ImportError:  # pragma: no cover - compatibility with older PyTorch
+        safe_context = nullcontext()
+    else:
+        safe_globals = getattr(torch.serialization, "safe_globals", None)
+        safe_context = (
+            safe_globals([TorchVersion]) if safe_globals is not None else nullcontext()
+        )
+    with safe_context:
+        payload = torch.load(path, map_location=map_location, weights_only=True)
     if not isinstance(payload, dict):
         raise TypeError("checkpoint root must be a mapping")
     if payload.get("schema_version") != 1:
@@ -119,6 +135,7 @@ def load_training_checkpoint(
     metadata = payload.get("metadata", {})
     if not isinstance(metadata, dict):
         raise TypeError("checkpoint metadata must be a mapping")
+    metadata = json.loads(json.dumps(metadata, ensure_ascii=False))
     optimizer_state = payload.get("optimizer")
     if optimizer_state is not None and not isinstance(optimizer_state, dict):
         raise TypeError("optimizer state must be a mapping")

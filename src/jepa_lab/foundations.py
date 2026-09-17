@@ -93,7 +93,7 @@ def environment_report() -> dict[str, Any]:
         "python": sys.version.split()[0],
         "platform": platform.platform(),
         "machine": platform.machine(),
-        "torch": torch.__version__,
+        "torch": str(torch.__version__),
         "cuda_available": cuda_available,
         "cuda_arch_compatible": cuda_compatible,
         "mps_available": mps_available,
