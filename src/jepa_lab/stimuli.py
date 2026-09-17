@@ -90,6 +90,58 @@ def moving_square_video(frames: int, image_size: int) -> torch.Tensor:
     return video
 
 
+def video_clip_from_file(
+    path: str | Path,
+    *,
+    frames: int = 16,
+    image_size: int = 224,
+) -> tuple[torch.Tensor, np.ndarray]:
+    """Uniformly sample and centre-crop a real video as ``[1,T,3,H,W]``.
+
+    OpenCV is an optional dependency provided by the project's ``video`` extra.
+    Returning the original frame indices keeps the exported feature archive
+    traceable to the source clip.
+    """
+
+    if frames < 2 or image_size < 16:
+        raise ValueError("frames must be at least two and image_size at least 16")
+    path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    try:
+        import cv2
+    except ImportError as error:  # pragma: no cover - optional dependency boundary
+        raise RuntimeError("video loading requires: pip install -e '.[video]'") from error
+
+    capture = cv2.VideoCapture(str(path))
+    try:
+        if not capture.isOpened():
+            raise ValueError(f"could not open video: {path}")
+        frame_count = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
+        if frame_count < frames:
+            raise ValueError(
+                f"video contains {frame_count} frames; at least {frames} are required"
+            )
+        indices = np.rint(np.linspace(0, frame_count - 1, frames)).astype(np.int64)
+        sampled: list[torch.Tensor] = []
+        for index in indices:
+            capture.set(cv2.CAP_PROP_POS_FRAMES, int(index))
+            ok, bgr = capture.read()
+            if not ok:
+                raise ValueError(f"could not read frame {int(index)} from {path}")
+            rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+            height, width = rgb.shape[:2]
+            side = min(height, width)
+            top = (height - side) // 2
+            left = (width - side) // 2
+            image = Image.fromarray(rgb[top : top + side, left : left + side])
+            image = image.resize((image_size, image_size), Image.Resampling.BICUBIC)
+            sampled.append(TF.pil_to_tensor(image).float().div_(255.0))
+    finally:
+        capture.release()
+    return torch.stack(sampled).unsqueeze(0), indices
+
+
 def temporal_frame_indices(frames: int) -> np.ndarray:
     """Frame-index manifest matching :func:`jepa_lab.adapters.temporal_variants`."""
 
@@ -110,4 +162,5 @@ __all__ = [
     "moving_square_video",
     "synthetic_image_scene",
     "temporal_frame_indices",
+    "video_clip_from_file",
 ]

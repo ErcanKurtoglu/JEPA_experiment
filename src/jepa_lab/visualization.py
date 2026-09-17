@@ -46,7 +46,10 @@ def plot_tube_mask(mask: torch.Tensor, max_frames: int = 8) -> Figure:
         axes[0, index].imshow(mask[index].cpu(), vmin=0, vmax=1, cmap="gray_r")
         axes[0, index].set_title(f"t={index}")
         axes[0, index].axis("off")
-    figure.suptitle("V-JEPA target tubes (white = target)")
+    # ``gray_r`` maps False/0 to white and True/1 to black.  A dark target is
+    # also visually consistent with the idea that this token is hidden from
+    # the context encoder.
+    figure.suptitle("V-JEPA target tubes (black = target, white = context)")
     figure.tight_layout()
     return figure
 
