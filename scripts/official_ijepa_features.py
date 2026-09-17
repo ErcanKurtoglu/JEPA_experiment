@@ -48,6 +48,14 @@ def main() -> int:
     )
     parser.add_argument("--allow-incompatible", action="store_true")
     parser.add_argument("--image", type=Path)
+    parser.add_argument(
+        "--comparison-image",
+        type=Path,
+        help=(
+            "Optional unrelated image. Only its normal view is encoded and appended "
+            "to the exported features for a positive-vs-negative similarity check."
+        ),
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
@@ -57,6 +65,8 @@ def main() -> int:
         parser.error("image-size must be divisible by patch-size")
     if args.image is not None and not args.image.is_file():
         parser.error(f"image does not exist: {args.image}")
+    if args.comparison_image is not None and not args.comparison_image.is_file():
+        parser.error(f"comparison image does not exist: {args.comparison_image}")
 
     device = select_device(args.device)
     model = getattr(vit, args.model)(
@@ -97,6 +107,16 @@ def main() -> int:
         for name, pixels in variants.items():
             normalized = ((pixels.unsqueeze(0) - MEAN) / STD).to(device)
             features[name] = model(normalized).float().cpu()
+        if args.comparison_image is not None:
+            comparison_pixels = image_views(args.comparison_image, args.image_size)[
+                "normal"
+            ]
+            normalized = ((comparison_pixels.unsqueeze(0) - MEAN) / STD).to(device)
+            features["different_image"] = model(normalized).float().cpu()
+
+    output_order = list(IMAGE_VIEW_ORDER)
+    if args.comparison_image is not None:
+        output_order.append("different_image")
 
     payload: dict[str, object] = {
         "implementation": "facebookresearch/ijepa@52c1ae95",
@@ -106,8 +126,11 @@ def main() -> int:
         "patch_size": args.patch_size,
         "image_size": args.image_size,
         "input_source": str(args.image) if args.image else "deterministic synthetic image",
-        "variant_order": list(IMAGE_VIEW_ORDER),
-        "stimulus_id": "shared-image-scene-v1",
+        "comparison_source": (
+            str(args.comparison_image) if args.comparison_image is not None else None
+        ),
+        "variant_order": output_order,
+        "stimulus_id": args.image.stem if args.image else "shared-image-scene-v1",
         "feature_shape": list(features["normal"].shape),
         "expected_tokens": (args.image_size // args.patch_size) ** 2,
         "cosine_to_normal": cosine_to_reference(features),
@@ -117,14 +140,23 @@ def main() -> int:
     }
     if args.output is not None:
         stacked = np.concatenate(
-            [features[name].numpy() for name in IMAGE_VIEW_ORDER], axis=0
+            [features[name].numpy() for name in output_order], axis=0
         )
         export_features(
             args.output,
             stacked,
-            labels=np.arange(len(IMAGE_VIEW_ORDER), dtype=np.int64),
+            labels=np.arange(len(output_order), dtype=np.int64),
             sample_ids=np.asarray(
-                [f"shared-image-scene-v1/{name}" for name in IMAGE_VIEW_ORDER]
+                [
+                    (
+                        f"shared-image-scene-v1/{name}"
+                        if args.image is None
+                        else f"{args.image.stem}/{name}"
+                    )
+                    if name != "different_image"
+                    else f"{args.comparison_image.stem}/normal"
+                    for name in output_order
+                ]
             ),
             metadata=payload,
         )
